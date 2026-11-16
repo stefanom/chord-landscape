@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The page carries its own icon, so browsers no longer ask the host for `/favicon.ico` and log a 404.
+
 ## 0.1.0 (2026-11-15)
 
 First public release.

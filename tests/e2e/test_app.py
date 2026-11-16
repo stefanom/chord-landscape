@@ -24,6 +24,15 @@ def test_starts_at_home(page):
     assert page.locator('#compass .verb').count() >= 8
 
 
+def test_the_page_brings_its_own_icon(page):
+    # Without one, every browser asks the host for /favicon.ico and logs a 404.
+    href = page.get_attribute('link[rel="icon"]', 'href')
+    assert href.startswith('data:image/svg+xml,')
+    assert page.evaluate("""href => new Promise(done => {
+      const img = new Image(); img.onload = () => done(img.naturalWidth > 0); img.onerror = () => done(false); img.src = href;
+    })""", href)
+
+
 def test_a_move_joins_the_path_and_undo_takes_it_back(page):
     page.click(group('Follow the road') + ' >> nth=0')
     assert path(page) == 'C F'
