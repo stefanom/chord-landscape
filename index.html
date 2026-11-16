@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chord Landscape: an improviser's map of harmony</title>
+<meta name="description" content="An interactive map of harmony for improvisers: where you are, what the chord wants, and the moves you can make from it.">
+<script id="early-scheme">(function () { var t = null; try { t = localStorage.getItem('chord-landscape-scheme'); } catch (e) {} if (t !== 'light' && t !== 'dark') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.setAttribute('data-scheme', t); })();</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+<header>
+  <p class="kick">An improviser's map of harmony</p>
+  <h1>Chord Landscape</h1>
+  <p class="dek">Every chord has a job: it rests, it drifts away, or it pulls. Pick a key, tap a chord, and the page shows where you are, what the chord wants, and the moves you can make from it: a whole chord from the list, or one finger at a time on the piano. Each move is drawn on three maps and on the keyboard.</p>
+</header>
+
+<div class="row controls">
+  <label class="small muted">Home <select id="key" aria-label="Home key"></select></label>
+  <div class="seg" role="group" aria-label="Mode"><button class="btn" id="mode-major">Major</button><button class="btn" id="mode-minor">Minor</button></div>
+  <div class="seg" role="group" aria-label="Chord colour"><button class="btn" id="rich-off">Triads</button><button class="btn" id="rich-on">Sevenths</button></div>
+  <button class="btn" id="scale8" aria-pressed="false" title="Mark Barry Harris’s eight-note scale on the piano: the home notes and the diminished notes between them">8-note scale</button>
+  <label class="small muted">Tempo <input type="range" id="tempo" min="50" max="140" value="84" aria-label="Tempo"></label>
+  <span class="grow"></span>
+  <div class="seg" role="group" aria-label="Appearance" id="theme"><button class="btn" data-set-theme="light">☀ Light</button><button class="btn" data-set-theme="dark">☾ Dark</button></div>
+</div>
+<div class="now" id="now">
+  <div class="here"><span class="here-name" id="here-name"></span><span class="here-num" id="here-num"></span><span class="job" id="here-job"></span><button class="btn mini" id="rehome" hidden title="Make this chord the home key: the maps redraw around it, your notes stay where they are" aria-label="Make this chord the home key">⌂<span> Make this home</span></button></div>
+  <div class="path" id="path" aria-label="Your path so far"></div>
+  <div class="transport">
+    <button class="btn go" id="play" aria-label="Play the path">▶<span> Play</span></button>
+    <button class="btn" id="loop" aria-pressed="false" aria-label="Loop">⟳<span> Loop</span></button>
+    <button class="btn" id="undo" aria-label="Undo the last chord">↶<span> Undo</span></button>
+    <button class="btn" id="clear" aria-label="Start over">✕<span> Start over</span></button>
+  </div>
+  <div class="kbd">
+    <svg id="keys" viewBox="0 0 780 150" role="img" aria-label="Keyboard showing the current chord"></svg>
+    <div class="kside">
+      <div class="voices" id="voices" role="group" aria-label="Move one finger a half step"></div>
+      <p class="small muted" id="lead"></p>
+    </div>
+  </div>
+</div>
+
+<section id="where">
+  <p class="kick">I. The compass</p>
+  <h2>You are here. Where can you go?</h2>
+  <p class="muted" style="max-width:70ch">Tap any option or any highlighted spot on the map to move there and hear it. Tap a move's name to show only its destinations on the map. Tap a chord in your path to select it; the × beside it removes it, and Undo takes back any change. The piano keys are playable, and the ‹ › arrows beside the piano move one finger (or the bass) a half step: the page names whatever you made and puts it on the maps. Colour is the chord's job: <span style="color:var(--rest)">rest</span>, <span style="color:var(--drift)">drift</span>, <span style="color:var(--pull)">pull</span>.</p>
+  <div class="work">
+    <div class="leftcol">
+      <div class="card lens">
+        <div class="row" style="margin-bottom:var(--s2)">
+          <div class="seg" role="group" aria-label="Map" id="lens-tabs">
+            <button class="btn" data-lens="roads">Roads</button><button class="btn" data-lens="wheel">Wheel</button><button class="btn" data-lens="lattice">Lattice</button>
+          </div>
+          <span class="grow"></span>
+          <div class="legend"><span><i style="background:var(--rest)"></i>rest</span><span><i style="background:var(--drift)"></i>drift</span><span><i style="background:var(--pull)"></i>pull</span></div>
+        </div>
+        <svg id="map" viewBox="0 0 760 534"></svg>
+        <details class="lens-help"><summary>How to read this map</summary><p class="small muted" id="lens-note"></p></details>
+      </div>
+    </div>
+    <div class="card" id="compass"></div>
+  </div>
+</section>
+
+<section id="shape">
+  <p class="kick">II. The shape of your path</p>
+  <h2>See what you just played</h2>
+  <p class="muted" style="max-width:70ch">Two more ways to look at the same chords. The weave shows how each finger moves; flat lines are notes you hold. The profile shows how far each chord sits from rest, so you can see whether your path builds and releases or just circles.</p>
+  <div class="two" style="margin-top:var(--s4)">
+    <div class="card lens"><h3>The weave: how the voices move</h3><svg id="weave" viewBox="0 0 560 250"></svg><p class="small muted lens-note" id="weave-note"></p></div>
+    <div class="card lens"><h3>The profile: distance from rest</h3><svg id="profile" viewBox="0 0 560 250"></svg><p class="small muted lens-note" id="profile-note"></p></div>
+  </div>
+</section>
+
+<section id="start">
+  <p class="kick">III. Trailheads</p>
+  <h2>Start from a path, or let the page wander</h2>
+  <div class="two" style="margin-top:var(--s4)">
+    <div class="card">
+      <h3>Known paths worth bending</h3>
+      <p class="small muted">Load one, loop it, then change a single chord with the compass.</p>
+      <div class="seeds" id="seeds"></div>
+    </div>
+    <div class="card">
+      <h3>Wander</h3>
+      <p class="small muted">The page takes a walk away from home and back, using the same moves as the compass, and labels each step with the move it used. Listen, then steal the turn you liked.</p>
+      <div class="row" style="margin:var(--s3) 0">
+        <label class="small muted">Safe <input type="range" id="adv" min="1" max="5" value="3" aria-label="How adventurous"> Wild</label>
+        <div class="seg" role="group" aria-label="Length" id="wlen"><button class="btn" data-n="4">4</button><button class="btn" data-n="6">6</button><button class="btn" data-n="8">8</button></div>
+        <button class="btn go" id="wander">Take me somewhere</button>
+      </div>
+      <div id="wander-out" class="small muted"></div>
+    </div>
+  </div>
+</section>
+
+<section id="dares">
+  <p class="kick">IV. At the piano</p>
+  <h2>Dares</h2>
+  <p class="muted" style="max-width:70ch">Habits break under constraints. Deal a card, set a timer for five minutes, and improvise inside the rule.</p>
+  <div class="card" style="margin-top:var(--s4);max-width:760px">
+    <p class="dare" id="dare"></p>
+    <p class="small muted" id="dare-why"></p>
+    <div class="row"><button class="btn go" id="deal">Deal another</button><button class="btn" id="dare-setup" hidden>Set it up for me</button></div>
+  </div>
+  <p class="small muted" style="margin-top:var(--s6)">Piano sound: Salamander Grand Piano samples by Alexander Holm (CC BY 3.0), played in your browser. “Home and pull” follows Barry Harris’s sixth–diminished teaching as told in Joe Mendick’s video “The Major Chord Has Been Missing a Note”; the half-step voices follow Chopin’s E minor Prelude as read in Inside the Score’s “Most musicians learn harmony wrong”. The jobs (rest, drift, pull) and the distance profile are rules of thumb, not laws: if a move sounds good, it is good.</p>
+</section>
+</main>
+<noscript><p style="padding:24px">This page needs JavaScript.</p></noscript>
+<script src="js/theory.js"></script>
+<script src="js/voicing.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/path.js"></script>
+<script src="js/voices.js"></script>
+<script src="js/header.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/shape.js"></script>
+<script src="js/compass.js"></script>
+<script src="js/practice.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
